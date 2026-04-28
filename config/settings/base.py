@@ -108,8 +108,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=env.int('JWT_ACCESS_TOKEN_LIFETIME_MINUTES', default=60)),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=env.int('JWT_REFRESH_TOKEN_LIFETIME_DAYS', default=7)),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
@@ -121,6 +121,19 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'RecorD API',
     'DESCRIPTION': '프로젝트 관리 및 포트폴리오 서비스 API',
     'VERSION': '1.0.0',
+    'SECURITY': [{'BearerAuth': []}],
+    'COMPONENTS': {
+        'securitySchemes': {
+            'BearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            }
+        }
+    },
 }
 
-ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY', default='')
+GOOGLE_AI_API_KEY = env('GOOGLE_AI_API_KEY', default='')
+
+KAKAO_REST_API_KEY = env('KAKAO_REST_API_KEY', default='')
+KAKAO_REDIRECT_URI = env('KAKAO_REDIRECT_URI', default='')

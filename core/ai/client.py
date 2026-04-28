@@ -1,11 +1,12 @@
-import anthropic
+import google.generativeai as genai
 from django.conf import settings
 
-_client = None
+_model = None
 
 
-def get_client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        _client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-    return _client
+def get_model() -> genai.GenerativeModel:
+    global _model
+    if _model is None:
+        genai.configure(api_key=settings.GOOGLE_AI_API_KEY)
+        _model = genai.GenerativeModel('gemini-1.5-flash')
+    return _model
