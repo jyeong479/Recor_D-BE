@@ -1,9 +1,9 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import SocialLoginView, LogoutView, ProfileView
+from .views import KakaoLoginView, LogoutView, ProfileView
 
 urlpatterns = [
-    path('social-login/', SocialLoginView.as_view(), name='social-login'),
+    path('kakao/', KakaoLoginView.as_view(), name='kakao-login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('profile/', ProfileView.as_view(), name='profile'),

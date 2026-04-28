@@ -9,6 +9,17 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'email', 'date_joined')
 
 
-class SocialLoginSerializer(serializers.Serializer):
-    provider = serializers.ChoiceField(choices=['google', 'kakao', 'github'])
-    access_token = serializers.CharField()
+class KakaoLoginSerializer(serializers.Serializer):
+    code = serializers.CharField(help_text='카카오 인가코드')
+    redirect_uri = serializers.CharField(
+        required=False,
+        default='',
+        help_text='카카오 인가코드 발급 시 사용한 redirect_uri',
+    )
+
+
+class SocialLoginResponseSerializer(serializers.Serializer):
+    user = UserSerializer()
+    access = serializers.CharField(help_text='JWT 액세스 토큰 (24시간 유효)')
+    refresh = serializers.CharField(help_text='JWT 리프레시 토큰 (30일 유효)')
+    is_new_user = serializers.BooleanField(help_text='최초 가입 여부')
