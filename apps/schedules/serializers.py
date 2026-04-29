@@ -24,3 +24,10 @@ class ScheduleSerializer(serializers.ModelSerializer):
         schedule = super().create(validated_data)
         schedule.participants.set(participants)
         return schedule
+
+    def update(self, instance, validated_data):
+        participants = validated_data.pop('participants', None)
+        instance = super().update(instance, validated_data)
+        if participants is not None:
+            instance.participants.set(participants)
+        return instance

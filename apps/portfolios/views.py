@@ -26,7 +26,9 @@ class StarEntryListCreateView(generics.ListCreateAPIView):
     serializer_class = StarEntrySerializer
 
     def get_portfolio(self):
-        return get_object_or_404(Portfolio, id=self.kwargs['portfolio_id'], user=self.request.user)
+        if not hasattr(self, '_portfolio'):
+            self._portfolio = get_object_or_404(Portfolio, id=self.kwargs['portfolio_id'], user=self.request.user)
+        return self._portfolio
 
     def get_queryset(self):
         return StarEntry.objects.filter(portfolio=self.get_portfolio())
