@@ -51,7 +51,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('provider', models.CharField(choices=[('kakao', 'Kakao')], max_length=20)),
+                ('provider', models.CharField(choices=[('google', 'Google'), ('kakao', 'Kakao'), ('github', 'GitHub')], max_length=20)),
                 ('social_id', models.CharField(max_length=200)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='social_accounts', to=settings.AUTH_USER_MODEL)),
             ],
