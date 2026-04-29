@@ -1,11 +1,11 @@
-import anthropic
+import google.generativeai as genai
 from django.conf import settings
 
-_client = None
+_configured = False
 
 
-def get_client() -> anthropic.Anthropic:
-    global _client
-    if _client is None:
-        _client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-    return _client
+def configure():
+    global _configured
+    if not _configured:
+        genai.configure(api_key=settings.GOOGLE_AI_API_KEY)
+        _configured = True
