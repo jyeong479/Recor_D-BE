@@ -1,5 +1,6 @@
 import requests
 from django.conf import settings
+from django.db import transaction
 from .models import User, SocialAccount
 
 
@@ -49,17 +50,22 @@ def _get_user_info(access_token: str) -> dict:
 def _get_or_create_user(
     social_id: str, email: str, name: str, profile_image: str
 ) -> tuple[User, bool]:
-    try:
-        social = SocialAccount.objects.select_related('user').get(
-            provider='kakao', social_id=social_id
-        )
-        return social.user, False
-    except SocialAccount.DoesNotExist:
-        pass
+    with transaction.atomic():
+        try:
+            social = SocialAccount.objects.select_related('user').get(
+                provider='kakao', social_id=social_id
+            )
+            return social.user, False
+        except SocialAccount.DoesNotExist:
+            pass
 
-    user, created = User.objects.get_or_create(
-        email=email,
-        defaults={'username': email, 'name': name, 'profile_image': profile_image},
-    )
-    SocialAccount.objects.create(user=user, provider='kakao', social_id=social_id)
-    return user, created
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={'username': email, 'name': name, 'profile_image': profile_image},
+        )
+        SocialAccount.objects.get_or_create(
+            provider='kakao',
+            social_id=social_id,
+            defaults={'user': user},
+        )
+        return user, created

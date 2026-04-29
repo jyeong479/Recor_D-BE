@@ -1,3 +1,4 @@
+import requests as http_requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
@@ -41,7 +42,7 @@ class KakaoLoginView(APIView):
                 code=serializer.validated_data['code'],
                 redirect_uri=serializer.validated_data.get('redirect_uri', ''),
             )
-        except Exception:
+        except http_requests.RequestException:
             return Response({'error': '카카오 로그인에 실패했습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
         refresh = RefreshToken.for_user(user)
