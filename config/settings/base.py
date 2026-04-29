@@ -121,6 +121,16 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'RecorD API',
     'DESCRIPTION': '프로젝트 관리 및 포트폴리오 서비스 API',
     'VERSION': '1.0.0',
+    'SECURITY': [{'BearerAuth': []}],
+    'COMPONENTS': {
+        'securitySchemes': {
+            'BearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            }
+        }
+    },
 }
 
 GOOGLE_AI_API_KEY = env('GOOGLE_AI_API_KEY', default='')
