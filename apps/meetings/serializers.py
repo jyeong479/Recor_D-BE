@@ -26,3 +26,10 @@ class MeetingSerializer(serializers.ModelSerializer):
         meeting = super().create(validated_data)
         meeting.participants.set(participants)
         return meeting
+
+    def update(self, instance, validated_data):
+        participants = validated_data.pop('participants', None)
+        instance = super().update(instance, validated_data)
+        if participants is not None:
+            instance.participants.set(participants)
+        return instance
