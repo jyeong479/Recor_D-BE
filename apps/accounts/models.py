@@ -17,9 +17,7 @@ class User(AbstractUser):
 
 class SocialAccount(TimeStampedModel):
     PROVIDER_CHOICES = [
-        ('google', 'Google'),
         ('kakao', 'Kakao'),
-        ('github', 'GitHub'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='social_accounts')

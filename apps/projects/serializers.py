@@ -27,7 +27,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'owner', 'created_at')
 
     def get_member_count(self, obj):
-        return obj.members.count()
+        return len(obj.members.all())
 
     def create(self, validated_data):
         user = self.context['request'].user
