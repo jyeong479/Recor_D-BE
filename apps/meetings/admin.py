@@ -1,13 +1,7 @@
 from django.contrib import admin
-from .models import Meeting, MeetingNote
-
-
-class MeetingNoteInline(admin.StackedInline):
-    model = MeetingNote
-    extra = 0
+from .models import Meeting
 
 
 @admin.register(Meeting)
 class MeetingAdmin(admin.ModelAdmin):
-    list_display = ('title', 'project', 'held_at', 'created_by')
-    inlines = [MeetingNoteInline]
+    list_display = ('title', 'project', 'date', 'created_by')

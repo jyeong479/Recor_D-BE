@@ -3,8 +3,7 @@ from django.urls import reverse
 from unittest.mock import patch
 from rest_framework.test import APIClient
 from apps.accounts.models import User
-from apps.projects.models import Project, ProjectMember
-from .models import Meeting, MeetingNote
+from .models import Meeting
 
 
 @pytest.fixture
@@ -18,29 +17,40 @@ def user(db):
 
 
 @pytest.fixture
-def project(db, user):
-    project = Project.objects.create(name='Test Project', owner=user)
-    ProjectMember.objects.create(project=project, user=user, role='owner')
-    return project
-
-
-@pytest.fixture
-def meeting(db, project, user):
+def meeting(db, user):
     return Meeting.objects.create(
-        project=project, title='Sprint Retro',
-        held_at='2026-05-01T10:00:00+09:00', created_by=user,
+        title='Sprint Retro',
+        date='2026-05-01',
+        created_by=user,
     )
 
 
 @pytest.mark.django_db
-class TestMeetingNoteSummarize:
-    def test_summarize_note(self, client, user, meeting):
+class TestMeetingSummarize:
+    def test_summarize_meeting(self, client, user, meeting):
+        meeting.transcript = '회의 내용입니다.'
+        meeting.save()
         client.force_authenticate(user=user)
-        MeetingNote.objects.create(meeting=meeting, content='회의 내용입니다.')
 
         with patch('apps.meetings.services.summarize_meeting_note', return_value='AI 요약 결과'):
-            resp = client.post(reverse('meeting-note-summarize', kwargs={'meeting_id': meeting.id}))
+            resp = client.post(reverse('meeting-summarize', kwargs={'pk': meeting.id}))
 
         assert resp.status_code == 200
         assert resp.data['ai_summary'] == 'AI 요약 결과'
         assert resp.data['is_summarized'] is True
+
+    def test_summarize_without_content(self, client, user, meeting):
+        client.force_authenticate(user=user)
+        resp = client.post(reverse('meeting-summarize', kwargs={'pk': meeting.id}))
+        assert resp.status_code == 400
+
+    def test_create_meeting(self, client, user):
+        client.force_authenticate(user=user)
+        resp = client.post(reverse('meeting-list'), {
+            'title': '기획 회의',
+            'date': '2026-05-01',
+            'participants': '김철수, 이영희',
+            'duration': '45분',
+        })
+        assert resp.status_code == 201
+        assert resp.data['title'] == '기획 회의'

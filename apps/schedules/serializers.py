@@ -6,9 +6,9 @@ class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
         fields = (
-            'id', 'project', 'title', 'description',
+            'id', 'project', 'title', 'description', 'type',
             'start_datetime', 'end_datetime', 'is_all_day',
-            'location', 'participants', 'created_at',
+            'location', 'created_at',
         )
         read_only_fields = ('id', 'created_at')
 
@@ -19,15 +19,5 @@ class ScheduleSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        participants = validated_data.pop('participants', [])
         validated_data['user'] = self.context['request'].user
-        schedule = super().create(validated_data)
-        schedule.participants.set(participants)
-        return schedule
-
-    def update(self, instance, validated_data):
-        participants = validated_data.pop('participants', None)
-        instance = super().update(instance, validated_data)
-        if participants is not None:
-            instance.participants.set(participants)
-        return instance
+        return super().create(validated_data)

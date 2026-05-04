@@ -13,7 +13,7 @@ class TodoListCreateView(generics.ListCreateAPIView):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        return Todo.objects.filter(user=self.request.user).select_related('project', 'assigned_to')
+        return Todo.objects.filter(user=self.request.user).select_related('project')
 
 
 class TodoDetailView(generics.RetrieveUpdateDestroyAPIView):

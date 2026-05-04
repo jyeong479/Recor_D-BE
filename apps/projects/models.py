@@ -4,6 +4,20 @@ from common.models import TimeStampedModel
 
 
 class Project(TimeStampedModel):
+    STATUS_CHOICES = [
+        ('진행중', '진행중'),
+        ('완료', '완료'),
+        ('중단', '중단'),
+    ]
+    COLOR_CHOICES = [
+        ('primary', 'primary'),
+        ('accent', 'accent'),
+        ('secondary', 'secondary'),
+        ('success', 'success'),
+        ('warning', 'warning'),
+        ('destructive', 'destructive'),
+    ]
+
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     owner = models.ForeignKey(
@@ -11,7 +25,9 @@ class Project(TimeStampedModel):
     )
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='진행중')
+    tags = models.JSONField(default=list)
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default='primary')
 
     def __str__(self):
         return self.name

@@ -4,6 +4,13 @@ from common.models import TimeStampedModel
 
 
 class Schedule(TimeStampedModel):
+    TYPE_CHOICES = [
+        ('meeting', '회의'),
+        ('deadline', '마감일'),
+        ('presentation', '발표'),
+        ('other', '기타'),
+    ]
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='schedules'
     )
@@ -13,13 +20,11 @@ class Schedule(TimeStampedModel):
     )
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='other')
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
     is_all_day = models.BooleanField(default=False)
     location = models.CharField(max_length=300, blank=True)
-    participants = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='participating_schedules', blank=True
-    )
 
     def __str__(self):
         return self.title

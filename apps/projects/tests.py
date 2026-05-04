@@ -26,9 +26,16 @@ def project(db, user):
 class TestProject:
     def test_create_project(self, client, user):
         client.force_authenticate(user=user)
-        resp = client.post(reverse('project-list'), {'name': 'New Project', 'description': 'desc'})
+        resp = client.post(reverse('project-list'), {
+            'name': 'New Project',
+            'description': 'desc',
+            'status': '진행중',
+            'tags': ['React', 'Python'],
+            'color': 'primary',
+        }, format='json')
         assert resp.status_code == 201
-        assert ProjectMember.objects.filter(user=user, role='owner').exists()
+        assert resp.data['status'] == '진행중'
+        assert resp.data['color'] == 'primary'
 
     def test_list_only_my_projects(self, client, user, project):
         other = User.objects.create_user(email='other@test.com', username='other@test.com', password='pass')

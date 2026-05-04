@@ -15,7 +15,7 @@ def _parse_datetime_param(value, field_name):
 class ScheduleListCreateView(generics.ListCreateAPIView):
     serializer_class = ScheduleSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['project', 'is_all_day']
+    filterset_fields = ['project', 'is_all_day', 'type']
 
     def get_queryset(self):
         qs = Schedule.objects.filter(user=self.request.user)
@@ -25,7 +25,7 @@ class ScheduleListCreateView(generics.ListCreateAPIView):
             qs = qs.filter(start_datetime__gte=_parse_datetime_param(start, 'start'))
         if end:
             qs = qs.filter(end_datetime__lte=_parse_datetime_param(end, 'end'))
-        return qs.select_related('project').prefetch_related('participants')
+        return qs.select_related('project')
 
 
 class ScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):

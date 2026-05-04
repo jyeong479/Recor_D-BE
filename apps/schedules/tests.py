@@ -20,10 +20,12 @@ class TestSchedule:
         client.force_authenticate(user=user)
         resp = client.post(reverse('schedule-list'), {
             'title': 'Sprint Meeting',
+            'type': 'meeting',
             'start_datetime': '2026-05-01T10:00:00+09:00',
             'end_datetime': '2026-05-01T11:00:00+09:00',
         })
         assert resp.status_code == 201
+        assert resp.data['type'] == 'meeting'
 
     def test_invalid_datetime_range(self, client, user):
         client.force_authenticate(user=user)

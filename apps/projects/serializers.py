@@ -15,19 +15,28 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True)
-    members = ProjectMemberSerializer(many=True, read_only=True)
-    member_count = serializers.SerializerMethodField()
+    meeting_count = serializers.SerializerMethodField()
+    todo_count = serializers.SerializerMethodField()
+    completed_todo_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
         fields = (
-            'id', 'name', 'description', 'owner', 'members',
-            'member_count', 'start_date', 'end_date', 'is_active', 'created_at',
+            'id', 'name', 'description', 'owner',
+            'start_date', 'end_date', 'status', 'tags', 'color',
+            'meeting_count', 'todo_count', 'completed_todo_count',
+            'created_at',
         )
         read_only_fields = ('id', 'owner', 'created_at')
 
-    def get_member_count(self, obj):
-        return len(obj.members.all())
+    def get_meeting_count(self, obj):
+        return obj.meetings.count()
+
+    def get_todo_count(self, obj):
+        return obj.todos.count()
+
+    def get_completed_todo_count(self, obj):
+        return obj.todos.filter(status='done').count()
 
     def create(self, validated_data):
         user = self.context['request'].user
