@@ -39,7 +39,10 @@ class StarEntryDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = StarEntrySerializer
 
     def get_queryset(self):
-        return StarEntry.objects.filter(portfolio__user=self.request.user)
+        return StarEntry.objects.filter(
+            portfolio_id=self.kwargs['portfolio_id'],
+            portfolio__user=self.request.user,
+        )
 
 
 class StarEntrySummarizeView(APIView):
