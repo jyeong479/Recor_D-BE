@@ -39,28 +39,29 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'owner', 'createdAt')
 
     def get_meetingCount(self, obj):
-        return obj.meetings.count()
+        return len(obj.meetings.all())
 
     def get_todoCount(self, obj):
-        return obj.todos.count()
+        return len(obj.todos.all())
 
     def get_completedTodoCount(self, obj):
-        return obj.todos.filter(status='done').count()
+        return sum(1 for t in obj.todos.all() if t.status == 'done')
 
     def get_progress(self, obj):
-        total = obj.todos.count()
+        todos = obj.todos.all()
+        total = len(todos)
         if total == 0:
             return 0
-        return round(obj.todos.filter(status='done').count() / total * 100)
+        return round(sum(1 for t in todos if t.status == 'done') / total * 100)
 
     def get_meetingIds(self, obj):
-        return list(obj.meetings.values_list('id', flat=True))
+        return [m.id for m in obj.meetings.all()]
 
     def get_todoIds(self, obj):
-        return list(obj.todos.values_list('id', flat=True))
+        return [t.id for t in obj.todos.all()]
 
     def get_scheduleIds(self, obj):
-        return list(obj.schedules.values_list('id', flat=True))
+        return [s.id for s in obj.schedules.all()]
 
     def create(self, validated_data):
         user = self.context['request'].user

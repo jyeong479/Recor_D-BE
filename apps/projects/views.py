@@ -1,10 +1,7 @@
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
+from rest_framework import generics
 
-from .models import Project, ProjectMember
-from .serializers import ProjectSerializer, ProjectMemberSerializer
+from .models import Project
+from .serializers import ProjectSerializer
 
 
 class ProjectListCreateView(generics.ListCreateAPIView):
@@ -13,11 +10,13 @@ class ProjectListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Project.objects.filter(
             owner=self.request.user
-        ).prefetch_related('meetings', 'todos').order_by('-created_at')
+        ).prefetch_related('meetings', 'todos', 'schedules').order_by('-created_at')
 
 
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
 
     def get_queryset(self):
-        return Project.objects.filter(owner=self.request.user)
+        return Project.objects.filter(
+            owner=self.request.user
+        ).prefetch_related('meetings', 'todos', 'schedules')

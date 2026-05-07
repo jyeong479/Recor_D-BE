@@ -16,6 +16,11 @@ def user(db):
 
 
 @pytest.fixture
+def other_user(db):
+    return User.objects.create_user(email='other@test.com', username='other@test.com', password='pass')
+
+
+@pytest.fixture
 def project(db, user):
     project = Project.objects.create(name='Test Project', owner=user)
     ProjectMember.objects.create(project=project, user=user, role='owner')
@@ -41,10 +46,49 @@ class TestProject:
         assert resp.data['scheduleIds'] == []
         assert 'startDate' in resp.data
         assert 'endDate' in resp.data
+        assert resp.data['progress'] == 0
 
-    def test_list_only_my_projects(self, client, user, project):
-        other = User.objects.create_user(email='other@test.com', username='other@test.com', password='pass')
-        client.force_authenticate(user=other)
+    def test_list_only_my_projects(self, client, user, project, other_user):
+        client.force_authenticate(user=other_user)
         resp = client.get(reverse('project-list'))
         assert resp.status_code == 200
         assert len(resp.data['results']) == 0
+
+    def test_list_returns_my_projects(self, client, user, project):
+        client.force_authenticate(user=user)
+        resp = client.get(reverse('project-list'))
+        assert resp.status_code == 200
+        assert len(resp.data['results']) == 1
+        assert resp.data['results'][0]['id'] == project.id
+
+    def test_retrieve_project(self, client, user, project):
+        client.force_authenticate(user=user)
+        resp = client.get(reverse('project-detail', args=[project.id]))
+        assert resp.status_code == 200
+        assert resp.data['id'] == project.id
+        assert resp.data['name'] == project.name
+
+    def test_cannot_retrieve_other_user_project(self, client, other_user, project):
+        client.force_authenticate(user=other_user)
+        resp = client.get(reverse('project-detail', args=[project.id]))
+        assert resp.status_code == 404
+
+    def test_update_project(self, client, user, project):
+        client.force_authenticate(user=user)
+        resp = client.patch(reverse('project-detail', args=[project.id]), {
+            'name': 'Updated Name',
+            'status': 'completed',
+        }, format='json')
+        assert resp.status_code == 200
+        assert resp.data['name'] == 'Updated Name'
+        assert resp.data['status'] == 'completed'
+
+    def test_delete_project(self, client, user, project):
+        client.force_authenticate(user=user)
+        resp = client.delete(reverse('project-detail', args=[project.id]))
+        assert resp.status_code == 204
+        assert not Project.objects.filter(id=project.id).exists()
+
+    def test_unauthenticated_cannot_access(self, client):
+        resp = client.get(reverse('project-list'))
+        assert resp.status_code == 401
