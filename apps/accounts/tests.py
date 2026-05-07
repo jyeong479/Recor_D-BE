@@ -84,9 +84,39 @@ class TestKakaoLogin:
 
 
 @pytest.mark.django_db
+class TestLogout:
+    def test_logout_success(self, client, user):
+        from rest_framework_simplejwt.tokens import RefreshToken as RT
+        refresh = str(RT.for_user(user))
+        client.force_authenticate(user=user)
+        resp = client.post(reverse('logout'), {'refresh': refresh})
+        assert resp.status_code == 204
+
+    def test_logout_without_token_returns_400(self, client, user):
+        client.force_authenticate(user=user)
+        resp = client.post(reverse('logout'), {})
+        assert resp.status_code == 400
+
+    def test_logout_with_invalid_token_returns_400(self, client, user):
+        client.force_authenticate(user=user)
+        resp = client.post(reverse('logout'), {'refresh': 'invalid-token'})
+        assert resp.status_code == 400
+
+
+@pytest.mark.django_db
 class TestProfile:
     def test_get_profile(self, client, user):
         client.force_authenticate(user=user)
         resp = client.get(reverse('profile'))
         assert resp.status_code == 200
         assert resp.data['email'] == user.email
+
+    def test_patch_profile_name(self, client, user):
+        client.force_authenticate(user=user)
+        resp = client.patch(reverse('profile'), {'name': '새이름'})
+        assert resp.status_code == 200
+        assert resp.data['name'] == '새이름'
+
+    def test_unauthenticated_cannot_access_profile(self, client):
+        resp = client.get(reverse('profile'))
+        assert resp.status_code == 401

@@ -2,7 +2,7 @@ import requests as http_requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
@@ -63,19 +63,25 @@ class LogoutView(APIView):
             name='LogoutRequest',
             fields={'refresh': serializers.CharField(help_text='리프레시 토큰')},
         ),
-        responses={204: OpenApiResponse(description='로그아웃 성공')},
+        responses={
+            204: OpenApiResponse(description='로그아웃 성공'),
+            400: OpenApiResponse(description='리프레시 토큰 누락 또는 유효하지 않음'),
+        },
     )
     def post(self, request):
         refresh_token = request.data.get('refresh')
-        if refresh_token:
-            try:
-                RefreshToken(refresh_token).blacklist()
-            except TokenError:
-                pass
+        if not refresh_token:
+            return Response({'error': '리프레시 토큰이 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            RefreshToken(refresh_token).blacklist()
+        except TokenError:
+            return Response({'error': '유효하지 않은 토큰입니다.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
     @extend_schema(tags=['Auth'], summary='내 프로필 조회', responses={200: UserSerializer})
     def get(self, request):
         return Response(UserSerializer(request.user).data)
