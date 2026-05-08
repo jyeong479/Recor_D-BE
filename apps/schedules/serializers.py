@@ -9,9 +9,9 @@ class ScheduleSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'project', 'title', 'description', 'type',
             'color', 'start_datetime', 'end_datetime', 'is_all_day',
-            'location', 'created_at',
+            'location', 'created_at', 'updated_at',
         )
-        read_only_fields = ('id', 'created_at')
+        read_only_fields = ('id', 'created_at', 'updated_at')
 
     def validate(self, attrs):
         start_datetime = attrs.get('start_datetime')

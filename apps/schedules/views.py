@@ -12,7 +12,7 @@ from .serializers import ScheduleSerializer
 def _parse_datetime_param(value, field_name):
     if parse_datetime(value) is None and parse_date(value) is None:
         raise ValidationError({
-            field_name: 'Enter a valid date or datetime. Example: 2026-01-01 or 2026-01-01T00:00:00'
+            field_name: '올바른 날짜 또는 일시 형식을 입력하세요. 예: 2026-01-01 또는 2026-01-01T00:00:00'
         })
     return value
 
@@ -31,7 +31,7 @@ def _parse_datetime_param(value, field_name):
     post=extend_schema(
         tags=['Schedules'],
         summary='일정 생성',
-        description='새 일정을 생성합니다. 프로젝트는 선택값이며, 기본 색상은 `primary`입니다.',
+        description='새 일정을 생성합니다. 프로젝트는 선택값이며, 기본 색상은 `green`입니다.',
         responses={201: ScheduleSerializer, 400: OpenApiResponse(description='유효성 검사 실패')},
     ),
 )
@@ -64,17 +64,28 @@ class ScheduleListCreateView(generics.ListCreateAPIView):
     put=extend_schema(
         tags=['Schedules'],
         summary='일정 전체 수정',
-        responses={200: ScheduleSerializer, 400: OpenApiResponse(description='유효성 검사 실패')},
+        responses={
+            200: ScheduleSerializer,
+            400: OpenApiResponse(description='유효성 검사 실패'),
+            404: OpenApiResponse(description='일정을 찾을 수 없음'),
+        },
     ),
     patch=extend_schema(
         tags=['Schedules'],
         summary='일정 부분 수정',
-        responses={200: ScheduleSerializer, 400: OpenApiResponse(description='유효성 검사 실패')},
+        responses={
+            200: ScheduleSerializer,
+            400: OpenApiResponse(description='유효성 검사 실패'),
+            404: OpenApiResponse(description='일정을 찾을 수 없음'),
+        },
     ),
     delete=extend_schema(
         tags=['Schedules'],
         summary='일정 삭제',
-        responses={204: OpenApiResponse(description='삭제 성공')},
+        responses={
+            204: OpenApiResponse(description='삭제 성공'),
+            404: OpenApiResponse(description='일정을 찾을 수 없음'),
+        },
     ),
 )
 class ScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):

@@ -14,7 +14,7 @@ class TodoFilter(django_filters.FilterSet):
 
     class Meta:
         model = Todo
-        fields = ['status', 'priority', 'project', 'due_date', 'due_date_after', 'due_date_before']
+        fields = ['status', 'priority', 'project', 'due_date']
 
 
 @extend_schema_view(
@@ -57,18 +57,29 @@ class TodoListCreateView(generics.ListCreateAPIView):
     put=extend_schema(
         tags=['Todos'],
         summary='할 일 전체 수정',
-        responses={200: TodoSerializer, 400: OpenApiResponse(description='유효성 검사 실패')},
+        responses={
+            200: TodoSerializer,
+            400: OpenApiResponse(description='유효성 검사 실패'),
+            404: OpenApiResponse(description='할 일을 찾을 수 없음'),
+        },
     ),
     patch=extend_schema(
         tags=['Todos'],
         summary='할 일 부분 수정',
         description='완료 처리는 `status`를 `done`으로, 완료 해제는 `in_progress`로 변경합니다.',
-        responses={200: TodoSerializer, 400: OpenApiResponse(description='유효성 검사 실패')},
+        responses={
+            200: TodoSerializer,
+            400: OpenApiResponse(description='유효성 검사 실패'),
+            404: OpenApiResponse(description='할 일을 찾을 수 없음'),
+        },
     ),
     delete=extend_schema(
         tags=['Todos'],
         summary='할 일 삭제',
-        responses={204: OpenApiResponse(description='삭제 성공')},
+        responses={
+            204: OpenApiResponse(description='삭제 성공'),
+            404: OpenApiResponse(description='할 일을 찾을 수 없음'),
+        },
     ),
 )
 class TodoDetailView(generics.RetrieveUpdateDestroyAPIView):

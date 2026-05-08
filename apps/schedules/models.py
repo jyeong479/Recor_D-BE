@@ -12,11 +12,12 @@ class Schedule(TimeStampedModel):
         ('other', '기타'),
     ]
     COLOR_CHOICES = [
-        ('primary', '기본'),
-        ('green', '초록'),
-        ('yellow', '노랑'),
-        ('teal', '청록'),
-        ('red', '빨강'),
+        ('green', 'green'),
+        ('blue', 'blue'),
+        ('teal', 'teal'),
+        ('yellow', 'yellow'),
+        ('brightGreen', 'brightGreen'),
+        ('red', 'red'),
     ]
 
     user = models.ForeignKey(
@@ -32,7 +33,7 @@ class Schedule(TimeStampedModel):
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='other')
-    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default='primary')
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default='green')
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
     is_all_day = models.BooleanField(default=False)
