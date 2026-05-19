@@ -80,7 +80,7 @@ class TestMeetingSummarize:
         assert_no_snake_case_response_fields(resp.data)
 
     def test_create_meeting_with_frontend_payload(self, client, user):
-        project = Project.objects.create(name='포트폴리오 관리 시스템', owner=user)
+        project = Project.objects.create(name='포트폴리오 관리 시스템', user=user)
         client.force_authenticate(user=user)
 
         resp = client.post(reverse('meeting-list'), {
@@ -110,8 +110,8 @@ class TestMeetingSummarize:
         assert_no_snake_case_response_fields(resp.data)
 
     def test_get_meeting_projects(self, client, user):
-        project = Project.objects.create(name='캡스톤 디자인', owner=user)
-        empty_project = Project.objects.create(name='포트폴리오 관리 시스템', owner=user)
+        project = Project.objects.create(name='캡스톤 디자인', user=user)
+        empty_project = Project.objects.create(name='포트폴리오 관리 시스템', user=user)
         Meeting.objects.create(
             project=project,
             title='프로젝트 회의',
@@ -138,7 +138,7 @@ class TestMeetingSummarize:
         assert resp.status_code == 201, resp.data
         assert resp.data['project'] == '포트폴리오 관리 시스템'
         assert Project.objects.filter(
-            owner=user,
+            user=user,
             name='포트폴리오 관리 시스템',
         ).exists()
 

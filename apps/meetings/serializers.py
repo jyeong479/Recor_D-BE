@@ -132,7 +132,7 @@ class MeetingSerializer(serializers.ModelSerializer):
         if value in (None, ''):
             return None
 
-        qs = Project.objects.filter(owner=user)
+        qs = Project.objects.filter(user=user)
         if isinstance(value, int) or str(value).isdigit():
             return qs.filter(pk=value).first()
 

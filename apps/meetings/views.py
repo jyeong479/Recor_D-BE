@@ -74,7 +74,7 @@ class MeetingDetailView(generics.RetrieveUpdateDestroyAPIView):
 class MeetingProjectsView(APIView):
     def get(self, request):
         owned_project_names = (
-            Project.objects.filter(owner=request.user)
+            Project.objects.filter(user=request.user)
             .order_by('name')
             .values_list('name', flat=True)
         )
