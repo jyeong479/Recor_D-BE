@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.projects.models import Project
@@ -27,12 +28,10 @@ class StarEntrySerializer(serializers.ModelSerializer):
         model = StarEntry
         fields = (
             'id', 'situation', 'task', 'action', 'result',
-            'ai_summary', 'aiSummary', 'is_summarized', 'isSummarized',
-            'summarized_at', 'summarizedAt', 'created_at', 'createdAt',
+            'aiSummary', 'isSummarized', 'summarizedAt', 'createdAt',
         )
         read_only_fields = (
-            'id', 'ai_summary', 'aiSummary', 'is_summarized', 'isSummarized',
-            'summarized_at', 'summarizedAt', 'created_at', 'createdAt',
+            'id', 'aiSummary', 'isSummarized', 'summarizedAt', 'createdAt',
         )
 
     def to_representation(self, instance):
@@ -48,6 +47,7 @@ class StarEntrySerializer(serializers.ModelSerializer):
 
 
 class PortfolioSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(read_only=True)
     projectId = serializers.IntegerField(source='project_id', allow_null=True, required=False)
     project = serializers.CharField(source='project.name', read_only=True)
     summary = serializers.CharField(source='description', allow_blank=True, required=False)
@@ -69,41 +69,47 @@ class PortfolioSerializer(serializers.ModelSerializer):
     aiSummary = serializers.SerializerMethodField()
     isSummarized = serializers.SerializerMethodField()
     summarizedAt = serializers.SerializerMethodField()
-    star_entries = StarEntrySerializer(many=True, read_only=True)
+    starEntries = StarEntrySerializer(source='star_entries', many=True, read_only=True)
 
     class Meta:
         model = Portfolio
         fields = (
             'id', 'project', 'projectId', 'title', 'description', 'summary',
-            'tech_stack', 'keywords', 'github_url', 'githubUrl',
-            'deploy_url', 'deployUrl', 'thumbnail_url', 'thumbnailUrl',
-            'is_public', 'isPublic', 'situation', 'task', 'action', 'result',
+            'keywords', 'githubUrl', 'deployUrl', 'thumbnailUrl', 'isPublic',
+            'situation', 'task', 'action', 'result',
             'aiSummary', 'isSummarized', 'summarizedAt',
-            'star_entries', 'created_at', 'createdAt', 'updated_at', 'updatedAt',
+            'starEntries', 'createdAt', 'updatedAt',
         )
         read_only_fields = (
-            'id', 'project', 'star_entries', 'created_at', 'createdAt',
-            'updated_at', 'updatedAt', 'aiSummary', 'isSummarized', 'summarizedAt',
+            'id', 'project', 'description', 'starEntries', 'createdAt', 'updatedAt',
+            'aiSummary', 'isSummarized', 'summarizedAt',
         )
 
     def _get_primary_star_entry(self, obj):
         entries = list(getattr(obj, 'star_entries').all())
         return entries[0] if entries else None
 
+    @extend_schema_field(serializers.CharField)
     def get_aiSummary(self, obj):
         entry = self._get_primary_star_entry(obj)
         return entry.ai_summary if entry else ''
 
+    @extend_schema_field(serializers.BooleanField)
     def get_isSummarized(self, obj):
         entry = self._get_primary_star_entry(obj)
         return entry.is_summarized if entry else False
 
+    @extend_schema_field(serializers.DateTimeField(allow_null=True))
     def get_summarizedAt(self, obj):
         entry = self._get_primary_star_entry(obj)
         return entry.summarized_at if entry and entry.summarized_at else None
 
     def to_internal_value(self, data):
         data = data.copy()
+        if 'summary' not in data and 'description' in data:
+            data['summary'] = data.get('description')
+        if 'keywords' not in data and 'tech_stack' in data:
+            data['keywords'] = data.get('tech_stack')
         if isinstance(data.get('keywords'), str):
             data['keywords'] = [
                 item.strip() for item in data['keywords'].split(',') if item.strip()
@@ -120,9 +126,12 @@ class PortfolioSerializer(serializers.ModelSerializer):
         project_id = attrs.get('project_id')
         if project_id is None:
             return attrs
+
         user = self.context['request'].user
         if not Project.objects.filter(id=project_id, user=user).exists():
-            raise serializers.ValidationError({'projectId': '접근할 수 없는 프로젝트입니다.'})
+            raise serializers.ValidationError({
+                'projectId': 'Project not found or not available to this user.',
+            })
         return attrs
 
     def to_representation(self, instance):
@@ -143,14 +152,28 @@ class PortfolioSerializer(serializers.ModelSerializer):
             star_fields['action'] = _join_action_items(star_fields['action'])
         return star_fields
 
+    def _build_star_entry_data(self, star_data):
+        entry_data = {
+            'situation': '',
+            'task': '',
+            'action': '',
+            'result': '',
+        }
+        entry_data.update(star_data)
+        return entry_data
+
     def create(self, validated_data):
         star_data = self._pop_star_data(validated_data)
         validated_data['user'] = self.context['request'].user
         if not validated_data.get('description') and star_data.get('situation'):
             validated_data['description'] = star_data['situation'][:120]
+
         portfolio = super().create(validated_data)
         if star_data:
-            StarEntry.objects.create(portfolio=portfolio, **star_data)
+            StarEntry.objects.create(
+                portfolio=portfolio,
+                **self._build_star_entry_data(star_data),
+            )
         return portfolio
 
     def update(self, instance, validated_data):
@@ -159,7 +182,10 @@ class PortfolioSerializer(serializers.ModelSerializer):
         if star_data:
             entry = portfolio.star_entries.order_by('id').first()
             if entry is None:
-                StarEntry.objects.create(portfolio=portfolio, **star_data)
+                StarEntry.objects.create(
+                    portfolio=portfolio,
+                    **self._build_star_entry_data(star_data),
+                )
             else:
                 for field, value in star_data.items():
                     setattr(entry, field, value)
