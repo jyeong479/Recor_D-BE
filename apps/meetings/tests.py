@@ -8,6 +8,24 @@ from apps.projects.models import Project
 from .models import Meeting
 
 
+MEETING_SNAKE_CASE_RESPONSE_FIELDS = {
+    'ai_summary',
+    'key_points',
+    'action_items',
+    'action_item_checks',
+    'source_type',
+    'audio_file_name',
+    'is_summarized',
+    'summarized_at',
+    'created_at',
+    'updated_at',
+}
+
+
+def assert_no_snake_case_response_fields(data):
+    assert not MEETING_SNAKE_CASE_RESPONSE_FIELDS.intersection(data.keys())
+
+
 @pytest.fixture
 def client():
     return APIClient()
@@ -38,8 +56,9 @@ class TestMeetingSummarize:
             resp = client.post(reverse('meeting-summarize', kwargs={'pk': meeting.id}))
 
         assert resp.status_code == 200
-        assert resp.data['ai_summary'] == 'AI 요약 결과'
-        assert resp.data['is_summarized'] is True
+        assert resp.data['aiSummary'] == 'AI 요약 결과'
+        assert resp.data['isSummarized'] is True
+        assert_no_snake_case_response_fields(resp.data)
 
     def test_summarize_without_content(self, client, user, meeting):
         client.force_authenticate(user=user)
@@ -58,6 +77,7 @@ class TestMeetingSummarize:
         assert resp.data['title'] == '기획 회의'
         assert resp.data['participants'] == ['김철수', '이영희']
         assert resp.data['durationMinutes'] == 45
+        assert_no_snake_case_response_fields(resp.data)
 
     def test_create_meeting_with_frontend_payload(self, client, user):
         project = Project.objects.create(name='포트폴리오 관리 시스템', owner=user)
@@ -87,6 +107,7 @@ class TestMeetingSummarize:
         assert resp.data['actionItems'] == ['API 명세 공유', '프론트 연동 확인']
         assert resp.data['actionItemChecks'] == [True, False]
         assert resp.data['sourceType'] == 'manual'
+        assert_no_snake_case_response_fields(resp.data)
 
     def test_get_meeting_projects(self, client, user):
         project = Project.objects.create(name='캡스톤 디자인', owner=user)

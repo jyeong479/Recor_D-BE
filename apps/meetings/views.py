@@ -26,6 +26,9 @@ class MeetingListCreateView(generics.ListCreateAPIView):
     ordering = ['-date', '-updated_at']
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Meeting.objects.none()
+
         qs = Meeting.objects.filter(created_by=self.request.user).select_related('project')
         project = self.request.query_params.get('project')
         query = self.request.query_params.get('q') or self.request.query_params.get('search')
@@ -56,11 +59,17 @@ class MeetingDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MeetingSerializer
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Meeting.objects.none()
+
         return Meeting.objects.filter(created_by=self.request.user).select_related('project')
 
 
 @extend_schema_view(
-    get=extend_schema(tags=MEETINGS_TAG),
+    get=extend_schema(
+        tags=MEETINGS_TAG,
+        responses={200: {'type': 'array', 'items': {'type': 'string'}}},
+    ),
 )
 class MeetingProjectsView(APIView):
     def get(self, request):
@@ -74,7 +83,11 @@ class MeetingProjectsView(APIView):
 
 
 @extend_schema_view(
-    post=extend_schema(tags=MEETINGS_TAG),
+    post=extend_schema(
+        tags=MEETINGS_TAG,
+        request=MeetingDraftUploadSerializer,
+        responses=MeetingSerializer,
+    ),
 )
 class MeetingDraftFromAudioView(APIView):
     def post(self, request):
@@ -93,7 +106,7 @@ class MeetingDraftFromAudioView(APIView):
 
 
 @extend_schema_view(
-    post=extend_schema(tags=MEETINGS_TAG),
+    post=extend_schema(tags=MEETINGS_TAG, request=None, responses=MeetingSerializer),
 )
 class MeetingSummarizeView(APIView):
     def post(self, request, pk):
