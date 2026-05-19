@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from apps.projects.models import Project
+from apps.projects.services import create_project
 from .models import Meeting
 
 
@@ -60,14 +61,6 @@ class MeetingSerializer(serializers.ModelSerializer):
     summarizedAt = serializers.DateTimeField(source='summarized_at', read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     updatedAt = serializers.DateTimeField(source='updated_at', read_only=True)
-    ai_summary = serializers.CharField(read_only=True)
-    key_points = serializers.ListField(child=serializers.CharField(), read_only=True)
-    action_items = serializers.ListField(child=serializers.CharField(), read_only=True)
-    action_item_checks = serializers.ListField(child=serializers.BooleanField(), read_only=True)
-    is_summarized = serializers.BooleanField(read_only=True)
-    summarized_at = serializers.DateTimeField(read_only=True)
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Meeting
@@ -77,14 +70,10 @@ class MeetingSerializer(serializers.ModelSerializer):
             'aiSummary', 'keyPoints', 'actionItems', 'actionItemChecks',
             'sourceType', 'audioFileName', 'isSummarized', 'summarizedAt',
             'createdAt', 'updatedAt',
-            'ai_summary', 'key_points', 'action_items', 'action_item_checks',
-            'is_summarized', 'summarized_at', 'created_at', 'updated_at',
         )
         read_only_fields = (
             'id', 'projectId', 'aiSummary', 'isSummarized', 'summarizedAt',
-            'createdAt', 'updatedAt', 'ai_summary', 'key_points',
-            'action_items', 'action_item_checks', 'is_summarized',
-            'summarized_at', 'created_at', 'updated_at',
+            'createdAt', 'updatedAt',
         )
 
     def to_internal_value(self, data):
@@ -146,7 +135,10 @@ class MeetingSerializer(serializers.ModelSerializer):
         qs = Project.objects.filter(user=user)
         if isinstance(value, int) or str(value).isdigit():
             return qs.filter(pk=value).first()
-        return qs.filter(name=str(value).strip()).first()
+
+        project_name = str(value).strip()
+        project = qs.filter(name=project_name).first()
+        return project or create_project({'name': project_name}, user)
 
     def _duration_to_minutes(self, value):
         digits = ''.join(char for char in str(value or '') if char.isdigit())
