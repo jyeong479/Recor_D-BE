@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 
 from apps.projects.models import Project
 from .models import Portfolio, StarEntry
@@ -27,12 +28,10 @@ class StarEntrySerializer(serializers.ModelSerializer):
         model = StarEntry
         fields = (
             'id', 'situation', 'task', 'action', 'result',
-            'ai_summary', 'aiSummary', 'is_summarized', 'isSummarized',
-            'summarized_at', 'summarizedAt', 'created_at', 'createdAt',
+            'aiSummary', 'isSummarized', 'summarizedAt', 'createdAt',
         )
         read_only_fields = (
-            'id', 'ai_summary', 'aiSummary', 'is_summarized', 'isSummarized',
-            'summarized_at', 'summarizedAt', 'created_at', 'createdAt',
+            'id', 'aiSummary', 'isSummarized', 'summarizedAt', 'createdAt',
         )
 
     def to_representation(self, instance):
@@ -69,35 +68,37 @@ class PortfolioSerializer(serializers.ModelSerializer):
     aiSummary = serializers.SerializerMethodField()
     isSummarized = serializers.SerializerMethodField()
     summarizedAt = serializers.SerializerMethodField()
-    star_entries = StarEntrySerializer(many=True, read_only=True)
+    starEntries = StarEntrySerializer(source='star_entries', many=True, read_only=True)
 
     class Meta:
         model = Portfolio
         fields = (
             'id', 'project', 'projectId', 'title', 'description', 'summary',
-            'tech_stack', 'keywords', 'github_url', 'githubUrl',
-            'deploy_url', 'deployUrl', 'thumbnail_url', 'thumbnailUrl',
-            'is_public', 'isPublic', 'situation', 'task', 'action', 'result',
+            'keywords', 'githubUrl', 'deployUrl', 'thumbnailUrl',
+            'isPublic', 'situation', 'task', 'action', 'result',
             'aiSummary', 'isSummarized', 'summarizedAt',
-            'star_entries', 'created_at', 'createdAt', 'updated_at', 'updatedAt',
+            'starEntries', 'createdAt', 'updatedAt',
         )
         read_only_fields = (
-            'id', 'project', 'star_entries', 'created_at', 'createdAt',
-            'updated_at', 'updatedAt', 'aiSummary', 'isSummarized', 'summarizedAt',
+            'id', 'project', 'starEntries', 'createdAt', 'updatedAt',
+            'aiSummary', 'isSummarized', 'summarizedAt',
         )
 
     def _get_primary_star_entry(self, obj):
         entries = list(getattr(obj, 'star_entries').all())
         return entries[0] if entries else None
 
+    @extend_schema_field(serializers.CharField)
     def get_aiSummary(self, obj):
         entry = self._get_primary_star_entry(obj)
         return entry.ai_summary if entry else ''
 
+    @extend_schema_field(serializers.BooleanField)
     def get_isSummarized(self, obj):
         entry = self._get_primary_star_entry(obj)
         return entry.is_summarized if entry else False
 
+    @extend_schema_field(serializers.DateTimeField(allow_null=True))
     def get_summarizedAt(self, obj):
         entry = self._get_primary_star_entry(obj)
         return entry.summarized_at if entry and entry.summarized_at else None

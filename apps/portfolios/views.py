@@ -98,10 +98,10 @@ class StarEntryDetailView(generics.RetrieveUpdateDestroyAPIView):
         return StarEntry.objects.filter(portfolio__user=self.request.user)
 
 
-@extend_schema_view(
-    post=extend_schema(tags=PORTFOLIOS_TAG),
-)
 class StarEntrySummarizeView(APIView):
+    serializer_class = StarEntrySerializer
+
+    @extend_schema(tags=PORTFOLIOS_TAG, request=None, responses=StarEntrySerializer)
     def post(self, request, portfolio_id, pk):
         entry = get_object_or_404(StarEntry, id=pk, portfolio_id=portfolio_id, portfolio__user=request.user)
         entry = summarize_star_entry(entry)

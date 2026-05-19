@@ -10,6 +10,28 @@ from apps.todos.models import Todo
 from .models import Portfolio, StarEntry
 
 
+PORTFOLIO_SNAKE_CASE_RESPONSE_FIELDS = {
+    'tech_stack',
+    'github_url',
+    'deploy_url',
+    'thumbnail_url',
+    'is_public',
+    'star_entries',
+    'created_at',
+    'updated_at',
+}
+STAR_ENTRY_SNAKE_CASE_RESPONSE_FIELDS = {
+    'ai_summary',
+    'is_summarized',
+    'summarized_at',
+    'created_at',
+}
+
+
+def assert_no_snake_case_response_fields(data, snake_case_fields):
+    assert not snake_case_fields.intersection(data.keys())
+
+
 @pytest.fixture
 def client():
     return APIClient()
@@ -71,6 +93,8 @@ class TestPortfolio:
         assert resp.data['summary'] == '회의록과 할 일을 바탕으로 STAR 초안을 만들었습니다.'
         assert resp.data['keywords'] == ['Django', 'AI', '협업']
         assert resp.data['action'] == ['serializer 응답 포맷을 맞췄습니다.', 'AI 생성 흐름을 분리했습니다.']
+        assert 'starEntries' in resp.data
+        assert_no_snake_case_response_fields(resp.data, PORTFOLIO_SNAKE_CASE_RESPONSE_FIELDS)
         assert Portfolio.objects.filter(user=user, project=project).count() == 1
         assert StarEntry.objects.count() == 1
 
@@ -83,6 +107,10 @@ class TestPortfolio:
         assert resp.status_code == 200
         assert len(resp.data['results']) == 1
         assert resp.data['results'][0]['id'] == portfolio.id
+        assert_no_snake_case_response_fields(
+            resp.data['results'][0],
+            PORTFOLIO_SNAKE_CASE_RESPONSE_FIELDS,
+        )
 
     def test_update_portfolio_star_fields(self, client, user, portfolio):
         client.force_authenticate(user=user)
@@ -97,6 +125,7 @@ class TestPortfolio:
         assert resp.data['title'] == '수정된 포트폴리오'
         assert resp.data['keywords'] == ['Django', 'API']
         assert resp.data['action'] == ['권한 검증을 추가했습니다.', '테스트를 작성했습니다.']
+        assert_no_snake_case_response_fields(resp.data, PORTFOLIO_SNAKE_CASE_RESPONSE_FIELDS)
 
     def test_cannot_use_other_user_project(self, client, user, other_user):
         other_project = Project.objects.create(name='타인 프로젝트', user=other_user)
@@ -122,6 +151,7 @@ class TestPortfolio:
         assert resp.status_code == 200
         assert resp.data['aiSummary'] == 'STAR 요약 결과'
         assert resp.data['isSummarized'] is True
+        assert_no_snake_case_response_fields(resp.data, STAR_ENTRY_SNAKE_CASE_RESPONSE_FIELDS)
 
     def test_generate_portfolio_from_project_context(self, client, user, project):
         Meeting.objects.create(
@@ -158,3 +188,4 @@ class TestPortfolio:
         assert resp.data['title'] == '회의록 기반 포트폴리오 자동화'
         assert resp.data['keywords'] == ['Django', 'Gemini', 'STAR']
         assert resp.data['action'] == ['프로젝트 관련 데이터를 수집했습니다.', 'Gemini 응답을 STAR 구조로 변환했습니다.']
+        assert_no_snake_case_response_fields(resp.data, PORTFOLIO_SNAKE_CASE_RESPONSE_FIELDS)
