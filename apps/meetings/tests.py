@@ -111,6 +111,7 @@ class TestMeetingSummarize:
 
     def test_get_meeting_projects(self, client, user):
         project = Project.objects.create(name='캡스톤 디자인', owner=user)
+        empty_project = Project.objects.create(name='포트폴리오 관리 시스템', owner=user)
         Meeting.objects.create(
             project=project,
             title='프로젝트 회의',
@@ -122,7 +123,24 @@ class TestMeetingSummarize:
         resp = client.get(reverse('meeting-project-list'))
 
         assert resp.status_code == 200
-        assert resp.data == [project.name]
+        assert resp.data == [project.name, empty_project.name]
+
+    def test_create_meeting_creates_missing_project_from_frontend_name(self, client, user):
+        client.force_authenticate(user=user)
+
+        resp = client.post(reverse('meeting-list'), {
+            'project': '포트폴리오 관리 시스템',
+            'title': '프로젝트 킥오프',
+            'date': '2026-05-05',
+            'durationMinutes': 30,
+        }, format='json')
+
+        assert resp.status_code == 201, resp.data
+        assert resp.data['project'] == '포트폴리오 관리 시스템'
+        assert Project.objects.filter(
+            owner=user,
+            name='포트폴리오 관리 시스템',
+        ).exists()
 
     def test_create_draft_from_audio_uses_stt_and_summary(self, client, user):
         client.force_authenticate(user=user)

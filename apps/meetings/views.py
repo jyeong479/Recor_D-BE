@@ -5,7 +5,7 @@ from rest_framework import generics, status
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
+from apps.projects.models import Project
 from .models import Meeting
 from .serializers import MeetingDraftUploadSerializer, MeetingSerializer
 from .services import build_meeting_draft_from_audio, summarize_meeting
@@ -73,12 +73,19 @@ class MeetingDetailView(generics.RetrieveUpdateDestroyAPIView):
 )
 class MeetingProjectsView(APIView):
     def get(self, request):
-        project_names = list(
+        owned_project_names = (
+            Project.objects.filter(owner=request.user)
+            .order_by('name')
+            .values_list('name', flat=True)
+        )
+        meeting_project_names = (
             Meeting.objects.filter(created_by=request.user, project__isnull=False)
             .order_by('project__name')
             .values_list('project__name', flat=True)
             .distinct()
         )
+        project_names = [*owned_project_names, *meeting_project_names]
+        project_names = list(dict.fromkeys(project_names))
         return Response(project_names)
 
 

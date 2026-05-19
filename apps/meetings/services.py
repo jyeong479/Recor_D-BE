@@ -2,7 +2,7 @@ from django.utils import timezone
 from core.ai.services import summarize_meeting_note, transcribe_audio_file
 from .models import Meeting
 
-MAX_AUDIO_FILE_SIZE = 25 * 1024 * 1024
+MAX_AUDIO_FILE_SIZE = 50 * 1024 * 1024
 SUPPORTED_AUDIO_EXTENSIONS = {'mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm'}
 
 

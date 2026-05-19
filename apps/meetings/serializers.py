@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from apps.projects.models import Project
+from apps.projects.services import create_project
 from .models import Meeting
 
 
@@ -134,7 +135,10 @@ class MeetingSerializer(serializers.ModelSerializer):
         qs = Project.objects.filter(owner=user)
         if isinstance(value, int) or str(value).isdigit():
             return qs.filter(pk=value).first()
-        return qs.filter(name=str(value).strip()).first()
+
+        project_name = str(value).strip()
+        project = qs.filter(name=project_name).first()
+        return project or create_project({'name': project_name}, user)
 
     def _duration_to_minutes(self, value):
         digits = ''.join(char for char in str(value or '') if char.isdigit())
