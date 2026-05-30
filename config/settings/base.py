@@ -134,6 +134,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 GOOGLE_AI_API_KEY = env('GOOGLE_AI_API_KEY', default='')
+GOOGLE_AI_MODEL = env('GOOGLE_AI_MODEL', default='gemini-2.5-flash')
 OPENAI_API_KEY = env('OPENAI_API_KEY', default='')
 OPENAI_TRANSCRIPTION_MODEL = env('OPENAI_TRANSCRIPTION_MODEL', default='whisper-1')
 
