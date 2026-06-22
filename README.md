@@ -11,6 +11,10 @@
 
 ---
 
+> **프론트엔드 레포지토리:** [RecorD_FE](https://github.com/jyeong479/RecorD_FE)
+
+---
+
 ## 주요 기능
 
 | 도메인 | 기능 |
